@@ -1,4 +1,4 @@
-import HttpStatus from "./helper.js";
+import { HttpStatus } from "./helper.js";
 
 function json(res, status, message, response = null, extra = {}) {
   return res.status(status).json({ status, message, response, ...extra });

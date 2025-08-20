@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
-import { response401 } from "../utils/response.js";
+import { response401 } from "../utils/ApiResponse.js";
 
 export function requireAuth(req, res, next) {
   const header = req.headers.authorization || "";
