@@ -16,9 +16,9 @@ const userSchema = new mongoose.Schema(
 
 export default mongoose.model(modelName.USER, userSchema);
 
-// {
-//   fName:"user",
-//   lName:"doe",
-//   email:"user@example.com",
-//   password:"user@123",
-// }
+const d = {
+  name: "user",
+  desc: "doe",
+  tag: "user@example.com",
+  password: "user@123",
+};
