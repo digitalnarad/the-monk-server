@@ -53,7 +53,7 @@ export const createProduct = asyncHandler(async (req, res) => {
 
   const skuId = randomUUID().slice(0, 12);
   const publicId = `img-${skuId}`;
-  const folderPath = `products/${skuId}/originals`;
+  const folderPath = `the-monk/products/${skuId}/originals`;
 
   const uploadRes = await new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
