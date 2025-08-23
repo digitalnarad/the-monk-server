@@ -8,6 +8,7 @@ import {
   setPrimaryById,
   getProduct,
   listProducts,
+  getSkuId,
 } from "./controller.js";
 import { upload } from "../../lib/upload.js";
 

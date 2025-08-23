@@ -1,5 +1,5 @@
 export function notFound(req, res, next) {
-  res.status(404).json({ success: false, message: "Not found" });
+  res.status(404).json({ success: false, message: "Path not found !" });
 }
 
 export function errorHandler(err, req, res, next) {
