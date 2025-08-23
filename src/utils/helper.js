@@ -31,6 +31,8 @@ export const msg = {
 
 export const modelName = {
   USER: "users",
+  PRODUCT: "products",
+  CATEGORY: "categories",
 };
 
 export const joi = {

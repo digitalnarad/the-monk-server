@@ -1,5 +1,4 @@
 // src/modules/product/model.js
-import e from "express";
 import mongoose from "mongoose";
 
 const imageSchema = new mongoose.Schema({
