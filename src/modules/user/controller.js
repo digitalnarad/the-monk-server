@@ -16,6 +16,8 @@ import {
   mapUserDBToApi,
 } from "../../utils/helper.js";
 import { findOne, createOne } from "../../config/db.service.js";
+import e from "express";
+import { env } from "../../config/env.js";
 
 // POST /api/v1/auth/signup
 export const signup = asyncHandler(async (req, res) => {
@@ -83,4 +85,35 @@ export const me = asyncHandler(async (req, res) => {
   return response200(res, msg.fetchSuccessfully, {
     user: mapUserDBToApi(user),
   });
+});
+
+export const adminLogin = asyncHandler(async (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    return response400(res, "email and password are required");
+  }
+
+  const admin = {
+    email: env.ADMIN_EMAIL,
+    password: env.ADMIN_PASSWORD,
+  };
+  // Need password for compare; ask full doc (options lean:false)
+  const found = await findOne(
+    modelName.USER,
+    { email, isDeleted: false },
+    {},
+    { lean: false }
+  );
+  if (!found) return response401(res, msg.invalidCredentials);
+
+  if (found.isActive === false) {
+    return response401(res, msg.accountInActivated);
+  }
+
+  const ok = await comparePassword(password, found.password);
+  if (!ok) return response401(res, msg.invalidCredentials);
+
+  const user = mapUserDBToApi(found);
+  const token = signToken({ id: user.id, role: user.role });
+  return response200(res, msg.loginSuccess, { user, token });
 });

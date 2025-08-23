@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { env } from "../config/env.js";
 import Joi from "joi";
+import { customAlphabet } from "nanoid";
 
 export const HttpStatus = {
   OK: 200,
@@ -81,4 +82,10 @@ export function mapUserDBToApi(doc) {
     isActive: doc.is_active,
     createdAt: doc.createdAt,
   };
+}
+
+const nano = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 12);
+
+export function genSkuId_nanoid() {
+  return nano();
 }

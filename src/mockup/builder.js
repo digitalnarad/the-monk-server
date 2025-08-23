@@ -30,7 +30,7 @@ export function buildMockupUrl({
   const transformation = [
     { fetch_format: "auto", quality: "auto", width, crop: "scale" },
     {
-      overlay: productPublicId,
+      overlay: `${productPublicId}`,
       width: w,
       height: h,
       crop: "fill",
@@ -41,5 +41,5 @@ export function buildMockupUrl({
     ...t.overlays.map((pid) => ({ overlay: pid, flags: "layer_apply" })),
   ];
 
-  return cloudinary.url(t.base, { transformation });
+  return cloudinary.url(t.base, { transformation, version: null });
 }

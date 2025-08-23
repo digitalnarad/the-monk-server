@@ -1,16 +1,32 @@
 // src/modules/product/routes.js
 import { Router } from "express";
-import multer from "multer";
-import { createProduct, getProduct, listProducts } from "./controller.js";
+import {
+  createProduct,
+  addImages,
+  replaceImageById,
+  deleteImageById,
+  setPrimaryById,
+  getProduct,
+  listProducts,
+} from "./controller.js";
+import { upload } from "../../lib/upload.js";
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 },
-});
 const r = Router();
 
-r.post("/", upload.single("file"), createProduct);
+// Create product with multiple images (field: files[])
+r.post("/", upload.array("files", 20), createProduct);
+
+// Add more images later
+r.post("/:id/images", upload.array("files", 20), addImages);
+
+// Replace/delete/set-primary using image _id only
+r.put("/:id/images/:imageId", upload.single("file"), replaceImageById);
+r.delete("/:id/images/:imageId", deleteImageById);
+r.patch("/:id/primary/:imageId", setPrimaryById);
+
+// Reads
 r.get("/", listProducts);
 r.get("/:id", getProduct);
+r.get("/get-sku-id", getSkuId);
 
 export default r;

@@ -1,6 +1,6 @@
 export const templates = {
   front0: {
-    base: "mockups/canvas/front0_base", // replace if different in your cloud
+    base: "mockups-template/front0_base", // replace if different in your cloud
     overlays: [
       // optional later: "mockups/canvas/front_texture",
       // optional later: "mockups/canvas/front_shadow",
@@ -10,7 +10,7 @@ export const templates = {
     maxOutputW: 2000,
   },
   angle30: {
-    base: "mockups/canvas/right30_base", // replace if different
+    base: "mockups-template/right30_base", // replace if different
     overlays: [
       // optional later: "mockups/canvas/angle30_edges"
     ],
@@ -18,7 +18,7 @@ export const templates = {
     maxOutputW: 2000,
   },
   angle45: {
-    base: "mockups/canvas/left45_base", // replace if different
+    base: "mockups-template/left30_base", // replace if different
     overlays: [
       // optional later: "mockups/canvas/angle45_edges"
     ],
