@@ -33,6 +33,7 @@ export const modelName = {
   USER: "users",
   PRODUCT: "products",
   CATEGORY: "categories",
+  TAG:"tags"
 };
 
 export const joi = {
