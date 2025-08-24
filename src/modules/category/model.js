@@ -1,5 +1,6 @@
 // src/modules/category/model.js
 import mongoose from "mongoose";
+import { modelName } from "../../utils/helper.js";
 
 const categorySchema = new mongoose.Schema(
   {
@@ -39,8 +40,8 @@ const categorySchema = new mongoose.Schema(
     isDeleted: { type: Boolean, default: false }, // keep for history without hard delete
 
     // Auditing (optional; fill in controllers/middleware if you track users)
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Bhumi' },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Bhumi' },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: modelName.USER },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: modelName.USER },
   },
   { timestamps: true }
 );
