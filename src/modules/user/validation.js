@@ -7,6 +7,7 @@ export const signupSchema = Joi.object({
   lName: joi.name("lName").required(),
   email: joi.email(),
   password: joi.password(),
+  isTermsAccepted: joi.bool(),
 });
 
 // POST /auth/login

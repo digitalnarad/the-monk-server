@@ -13,11 +13,8 @@ import {
   hashPassword,
   comparePassword,
   signToken,
-  mapUserDBToApi,
 } from "../../utils/helper.js";
 import { findOne, createOne } from "../../config/db.service.js";
-import e from "express";
-import { env } from "../../config/env.js";
 
 // POST /api/v1/auth/signup
 export const signup = asyncHandler(async (req, res) => {
@@ -35,11 +32,10 @@ export const signup = asyncHandler(async (req, res) => {
   req.body.isDeleted = false;
 
   const created = await createOne(modelName.USER, req.body);
-  const user = mapUserDBToApi(created);
 
-  const token = signToken({ id: user.id, role: user.role });
+  const token = signToken({ _id: created._id.toString(), role: created.role });
 
-  return response201(res, "Account created", { user, token });
+  return response201(res, "Account created", { user: created, token });
 });
 
 // POST /api/v1/auth/login
@@ -49,7 +45,6 @@ export const login = asyncHandler(async (req, res) => {
     return response400(res, "email and password are required");
   }
 
-  // Need password for compare; ask full doc (options lean:false)
   const found = await findOne(
     modelName.USER,
     { email, isDeleted: false },
@@ -65,14 +60,56 @@ export const login = asyncHandler(async (req, res) => {
   const ok = await comparePassword(password, found.password);
   if (!ok) return response401(res, msg.invalidCredentials);
 
-  const user = mapUserDBToApi(found);
-  const token = signToken({ id: user.id, role: user.role });
-  return response200(res, msg.loginSuccess, { user, token });
+  const token = signToken({ _id: found._id, role: found.role });
+  return response200(res, msg.loginSuccess, { user: found, token });
 });
 
 // GET /api/v1/auth/me
 export const me = asyncHandler(async (req, res) => {
-  const id = req.user?.id;
+  const id = req.user?._id;
+  console.log("id", id);
+  if (!id) return response401(res, "Unauthorized Request");
+
+  const user = await findOne(
+    modelName.USER,
+    { _id: id, isDeleted: false },
+    { fName: 1, lName: 1, email: 1, role: 1, isActive: 1, createdAt: 1 }
+  );
+  if (!user) return response404(res, "User not found");
+
+  return response200(res, msg.verifiedTToken, {
+    user,
+  });
+});
+
+// POST /api/v1/auth/admin/login
+export const adminLogin = asyncHandler(async (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    return response400(res, "email and password are required");
+  }
+
+  const found = await findOne(
+    modelName.USER,
+    { email, isDeleted: false },
+    {},
+    { lean: false }
+  );
+  if (!found) return response401(res, msg.invalidCredentials);
+
+  const ok = await comparePassword(password, found.password);
+  if (!ok) return response401(res, msg.invalidCredentials);
+
+  const token = signToken({ id: found.id, role: found.role });
+  return response200(res, msg.loginSuccess, {
+    token,
+    user: found,
+  });
+});
+
+// GET /api/v1/auth/admin/me
+export const meAdmin = asyncHandler(async (req, res) => {
+  const id = req.user?._id;
   if (!id) return response401(res, "Unauthorized Request");
 
   const user = await findOne(
@@ -83,37 +120,6 @@ export const me = asyncHandler(async (req, res) => {
   if (!user) return response404(res, "User not found");
 
   return response200(res, msg.fetchSuccessfully, {
-    user: mapUserDBToApi(user),
+    user: user,
   });
-});
-
-export const adminLogin = asyncHandler(async (req, res) => {
-  const { email, password } = req.body || {};
-  if (!email || !password) {
-    return response400(res, "email and password are required");
-  }
-
-  const admin = {
-    email: env.ADMIN_EMAIL,
-    password: env.ADMIN_PASSWORD,
-  };
-  // Need password for compare; ask full doc (options lean:false)
-  const found = await findOne(
-    modelName.USER,
-    { email, isDeleted: false },
-    {},
-    { lean: false }
-  );
-  if (!found) return response401(res, msg.invalidCredentials);
-
-  if (found.isActive === false) {
-    return response401(res, msg.accountInActivated);
-  }
-
-  const ok = await comparePassword(password, found.password);
-  if (!ok) return response401(res, msg.invalidCredentials);
-
-  const user = mapUserDBToApi(found);
-  const token = signToken({ id: user.id, role: user.role });
-  return response200(res, msg.loginSuccess, { user, token });
 });

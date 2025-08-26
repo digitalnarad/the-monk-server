@@ -1,15 +1,15 @@
 import {
-    response200,
-    response201,
-    response400,
-    response404,
-    response500,
+  response200,
+  response201,
+  response400,
+  response404,
+  response500,
 } from "../../utils/ApiResponse.js";
 import {
-    createOne,
-    findAll,
-    findOne,
-    updateOne,
+  createOne,
+  findAll,
+  findOne,
+  updateOne,
 } from "../../config/db.service.js";
 import { modelName } from "../../utils/helper.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";

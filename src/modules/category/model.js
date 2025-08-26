@@ -40,8 +40,14 @@ const categorySchema = new mongoose.Schema(
     isDeleted: { type: Boolean, default: false }, // keep for history without hard delete
 
     // Auditing (optional; fill in controllers/middleware if you track users)
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: modelName.CATEGORY },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: modelName.CATEGORY },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: modelName.CATEGORY,
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: modelName.CATEGORY,
+    },
   },
   { timestamps: true }
 );

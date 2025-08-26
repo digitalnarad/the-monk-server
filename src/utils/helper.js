@@ -5,6 +5,7 @@ import { env } from "../config/env.js";
 import Joi from "joi";
 import { customAlphabet } from "nanoid";
 
+// HTTP status codes
 export const HttpStatus = {
   OK: 200,
   CREATED: 201,
@@ -15,6 +16,7 @@ export const HttpStatus = {
   ERROR: 500,
 };
 
+// Response messages
 export const msg = {
   notFound: "Data not found",
   invalidCredentials: "Invalid credentials",
@@ -27,15 +29,18 @@ export const msg = {
   fetch_success: "Fetched successfully",
   update_success: "Updated successfully",
   delete_success: "Deleted successfully",
+  verifiedTToken: "Token is verified",
 };
 
+// Model names
 export const modelName = {
   USER: "users",
   PRODUCT: "products",
   CATEGORY: "categories",
-  TAG:"tags"
+  TAG: "tags",
 };
 
+// Joi validation schemas
 export const joi = {
   id: () =>
     Joi.string()
@@ -55,15 +60,13 @@ export const joi = {
   role: () => Joi.string().valid("user", "admin").default("user"),
 };
 
-// Password
+// Password hashing and comparison
 export async function hashPassword(plain) {
   return bcrypt.hash(plain, 10);
 }
 export async function comparePassword(plain, hash) {
   return bcrypt.compare(plain, hash);
 }
-
-// Request validation middleware
 
 // JWT
 export function signToken(payload) {
@@ -73,20 +76,7 @@ export function verifyToken(token) {
   return jwt.verify(token, env.JWT_SECRET);
 }
 
-/* -------------------- FIELD MAPPERS -------------------- */
-export function mapUserDBToApi(doc) {
-  if (!doc) return null;
-  return {
-    id: doc._id,
-    fName: doc.f_name,
-    lName: doc.l_name,
-    email: doc.email,
-    role: doc.role ?? "user",
-    isActive: doc.is_active,
-    createdAt: doc.createdAt,
-  };
-}
-
+// SKU ID Generator
 const nano = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 12);
 
 export function genSkuId_nanoid() {

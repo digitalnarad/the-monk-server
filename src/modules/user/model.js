@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, index: true },
     password: { type: String, required: true },
     role: { type: String, enum: ["user", "admin"], default: "user" },
+    isTermsAccepted: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
   },
@@ -15,10 +16,3 @@ const userSchema = new mongoose.Schema(
 );
 
 export default mongoose.model(modelName.USER, userSchema);
-
-const d = {
-  name: "user",
-  desc: "doe",
-  tag: "user@example.com",
-  password: "user@123",
-};
