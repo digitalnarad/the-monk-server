@@ -16,8 +16,13 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 
 // Create a new category
 export const createCategory = asyncHandler(async (req, res) => {
-  const category = await createOne(modelName.CATEGORY, req.body);
-  return response201(res, "Category created successfully", category);
+  console.log("req.body", req.body);
+  console.log("req.files", req.files);
+  // const category = await createOne(modelName.CATEGORY, {
+  //   ...req.body,
+  //   createdBy: req.user._id,
+  // });
+  return response201(res, "Category created successfully", {});
 });
 
 // Get all categories

@@ -67,7 +67,6 @@ export const login = asyncHandler(async (req, res) => {
 // GET /api/v1/auth/me
 export const me = asyncHandler(async (req, res) => {
   const id = req.user?._id;
-  console.log("id", id);
   if (!id) return response401(res, "Unauthorized Request");
 
   const user = await findOne(
@@ -100,7 +99,7 @@ export const adminLogin = asyncHandler(async (req, res) => {
   const ok = await comparePassword(password, found.password);
   if (!ok) return response401(res, msg.invalidCredentials);
 
-  const token = signToken({ id: found.id, role: found.role });
+  const token = signToken({ _id: found._id, role: found.role });
   return response200(res, msg.loginSuccess, {
     token,
     user: found,
