@@ -5,23 +5,34 @@ import {
   getCategoryById,
   updateCategory,
   deleteCategory,
+  getAllCategoriesList,
 } from "./controller.js";
 import { validator } from "../../middleware/validator.js";
 import { createCategoryValidation } from "./validation.js";
 import { isAdmin } from "../../middleware/auth.js";
+import { uploadSingle } from "../../lib/upload.js";
 
-const router = express.Router();
+const r = express.Router();
 
-router.get("/getAllCategories", getAllCategories);
-router.post("/", isAdmin, validator(createCategoryValidation), createCategory);
-router.put(
+r.get("/", getAllCategories);
+r.get("/get-list", getAllCategoriesList);
+r.get("/:id", getCategoryById);
+
+// Admin routes
+r.post(
+  "/",
+  isAdmin,
+  uploadSingle,
+  validator(createCategoryValidation),
+  createCategory
+);
+r.put(
   "/:id",
   isAdmin,
+  uploadSingle,
   validator(createCategoryValidation),
   updateCategory
 );
-router.get("/getCategoryById/:id", getCategoryById);
+r.delete("/:id", isAdmin, deleteCategory);
 
-router.delete("/deleteCategory/:id", deleteCategory);
-
-export default router;
+export default r;

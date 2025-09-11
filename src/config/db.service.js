@@ -108,14 +108,15 @@ export const findPaginateQuery = async (
   modelName,
   criteria,
   sort,
-  limit,
-  skip
+  skip,
+  limit
+  // search = ""
 ) => {
   return await modelOf(modelName)
     .find(criteria, {}, { lean: true })
     .sort(sort)
-    .skip(skip)
-    .limit(limit);
+    .skip(typeof skip === "number" ? skip : 0)
+    .limit(typeof limit === "number" ? limit : 10);
 };
 
 // count documents

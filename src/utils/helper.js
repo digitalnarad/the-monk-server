@@ -18,18 +18,18 @@ export const HttpStatus = {
 
 // Response messages
 export const msg = {
-  notFound: "Data not found",
   invalidCredentials: "Invalid credentials",
   loginSuccess: "Login successfully",
   invalidRole: "Invalid role",
   tokenExpired: "Token is expired or Invalid",
   accountInActivated: "Your account has been deactivated by the administrator.",
-  emailIsExists: "Email is already exists",
-  fetchSuccessfully: "Fetched successfully",
-  fetch_success: "Fetched successfully",
-  update_success: "Updated successfully",
-  delete_success: "Deleted successfully",
   verifiedTToken: "Token is verified",
+  fetch_success: (name) => `${name} fetched successfully`,
+  update_success: (name) => `${name} updated successfully`,
+  delete_success: (name) => `${name} deleted successfully`,
+  create_success: (name) => `${name} created successfully`,
+  not_found: (name) => `${name} not found`,
+  is_exists: (name) => `${name} is already exists`,
 };
 
 // Model names

@@ -6,10 +6,15 @@ import {
   response400,
   response404,
 } from "../../utils/ApiResponse.js";
-import { createOne, findOne, findAll } from "../../config/db.service.js";
+import {
+  createOne,
+  findOne,
+  findAll,
+  updateOne,
+} from "../../config/db.service.js";
 import Product from "./model.js";
-import { genSkuId_nanoid } from "../../utils/helper.js";
-import { deliverUrl, uploadBuffer, uploadMany } from "../../lib/upload.js";
+import { genSkuId_nanoid, modelName, msg } from "../../utils/helper.js";
+import { uploadToCloudinary } from "../../lib/upload.js";
 
 function folderFor(skuId) {
   return `the-monk/products/${skuId}/originals`;
@@ -27,28 +32,95 @@ function findImageIndexById(product, imageId) {
 }
 
 export const createProduct = asyncHandler(async (req, res) => {
-  const { title, desc, primaryIndex = 0 } = req.body || {};
-  const files = req.files || [];
+  console.log("req.body", req.body);
+  const { title, desc } = req.body || {};
+
+  let skuId = genSkuId_nanoid();
+
+  const isSkuIdExists = await findOne(modelName.PRODUCT, {
+    skuId: skuId,
+    isDeleted: false,
+  });
+
+  if (isSkuIdExists) {
+    skuId = genSkuId_nanoid();
+  }
 
   if (!title || !desc) return response400(res, "title and desc are required");
-  if (!files.length) return response400(res, "at least one image required");
+  if (!req.file) return response400(res, "at least one image required");
 
-  const folder = folderFor(skuId);
+  const folder = `the-monk/products/${skuId}/originals`;
 
-  const images = await uploadMany(files, folder, 1);
+  let image = null;
+  if (req.file) {
+    try {
+      const uploadResult = await uploadToCloudinary(
+        req.file.buffer,
+        folder,
+        `${skuId}-${Date.now().toString()}`
+      );
+      image = uploadResult.secure_url;
+    } catch (error) {
+      return response400(res, "Image upload failed");
+    }
+  }
 
-  const product = await createOne("products", {
+  const product = await createOne(modelName.PRODUCT, {
     skuId,
     title,
     desc,
-    images,
-    primaryIndex,
+    image,
+    defaultVariant: req.body.defaultVariant || "vertical",
+    category: req.body.category,
+    price: req.body.price,
+    discount: req.body.discount,
+    tags: JSON.parse(req.body.tags),
+    isActive: Boolean(req.body?.isActive),
+    addedBy: req.user._id,
   });
 
-  return response201(res, "Created", {
-    product,
-    primary: product.images[product.primaryIndex] || null,
-  });
+  return response201(res, msg.create_success("Product"), product);
+});
+
+export const updateProductDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const product = await Product.findOne({ _id: id, isDeleted: false });
+  if (!product) return response404(res, "Product not found");
+
+  const { title, desc } = req.body || {};
+  if (!title || !desc) return response400(res, "title and desc are required");
+
+  let newImage = null;
+  if (req.file) {
+    try {
+      const folder = `the-monk/products/${product.skuId}/originals`;
+      const uploadResult = await uploadToCloudinary(
+        req.file.buffer,
+        folder,
+        `${product.skuId}-${Date.now().toString()}`
+      );
+      newImage = uploadResult.secure_url;
+    } catch (error) {
+      return response400(res, "Image upload failed");
+    }
+  }
+
+  const update = {
+    title: req.body.title || product.title,
+    desc: req.body.desc || product.desc,
+    image: newImage || product.image,
+    defaultVariant: req.body.defaultVariant || product.defaultVariant,
+    category: req.body.category || product.category,
+    price: req.body.price || product.price,
+    discount: req.body.discount || product.discount,
+    tags: JSON.parse(req.body.tags) || product.tags,
+    isActive: Boolean(req.body?.isActive) || product.isActive,
+  };
+
+  await updateOne(modelName.PRODUCT, { _id: id }, update);
+
+  return response200(res, msg.update_success("Product"), product);
 });
 
 // POST /api/v1/products/:id/images (files[])
@@ -150,12 +222,12 @@ export const setPrimaryById = asyncHandler(async (req, res) => {
 
 // GET /api/v1/products/:id
 export const getProduct = asyncHandler(async (req, res) => {
-  const p = await findOne("products", { _id: req.params.id, isDeleted: false });
-  if (!p) return response404(res, "Not found");
-  return response200(res, "OK", {
-    product: p,
-    primary: p.images[p.primaryIndex] || null,
+  const product = await findOne(modelName.PRODUCT, {
+    _id: req.params.id,
+    isDeleted: false,
   });
+  if (!product) return response404(res, "Not found");
+  return response200(res, "OK", product);
 });
 
 // GET /api/v1/products
@@ -170,14 +242,5 @@ export const listProducts = asyncHandler(async (req, res) => {
 });
 
 export const getSkuId = asyncHandler(async (req, res) => {
-  let skuId = genSkuId_nanoid();
-
-  const product = await findOne("products", {
-    skuId: req.params.id,
-    isDeleted: false,
-  });
-  if (product) {
-    skuId = product.skuId;
-  }
   return response200(res, "OK", { skuId });
 });

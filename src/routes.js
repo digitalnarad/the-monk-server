@@ -8,7 +8,7 @@ import { requireAuth } from "./middleware/auth.js";
 const router = Router();
 
 router.use("/auth", authRoutes);
-router.use("/products", productRoutes);
+router.use("/products", requireAuth, productRoutes);
 router.use("/categories", requireAuth, categoryRoutes);
 router.use("/tags", requireAuth, tagRoutes);
 

@@ -24,7 +24,7 @@ export const signup = asyncHandler(async (req, res) => {
   }
 
   const exists = await findOne(modelName.USER, { email }, { _id: 1 });
-  if (exists) return response409(res, msg.emailIsExists);
+  if (exists) return response409(res, msg.is_exists("Email"));
 
   req.body.password = await hashPassword(password);
   req.body.role = "user";
@@ -118,7 +118,7 @@ export const meAdmin = asyncHandler(async (req, res) => {
   );
   if (!user) return response404(res, "User not found");
 
-  return response200(res, msg.fetchSuccessfully, {
+  return response200(res, msg.fetch_success("token"), {
     user: user,
   });
 });

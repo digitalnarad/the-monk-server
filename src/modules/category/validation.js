@@ -5,7 +5,7 @@ export const createCategoryValidation = Joi.object({
   name: Joi.string().min(3).max(50).required(),
   desc: Joi.string().max(255),
   isDeleted: Joi.boolean().default(false),
-  bannerImage: Joi.any().allow(null),
+  image: Joi.any().allow(null),
   sortOrder: Joi.number(),
   isActive: Joi.boolean().default(true),
 });

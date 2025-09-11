@@ -9,19 +9,23 @@ import {
   getProduct,
   listProducts,
   getSkuId,
+  updateProductDetails,
 } from "./controller.js";
-import { upload } from "../../lib/upload.js";
+import { uploadSingle } from "../../lib/upload.js";
 
 const r = Router();
 
 // Create product with multiple images (field: files[])
-r.post("/", upload.array("files", 20), createProduct);
+r.post("/", uploadSingle, createProduct);
+
+// Update product details
+r.put("/:id", uploadSingle, updateProductDetails);
 
 // Add more images later
-r.post("/:id/images", upload.array("files", 20), addImages);
+r.post("/:id/images", addImages);
 
 // Replace/delete/set-primary using image _id only
-r.put("/:id/images/:imageId", upload.single("file"), replaceImageById);
+r.put("/:id/images/:imageId", replaceImageById);
 r.delete("/:id/images/:imageId", deleteImageById);
 r.patch("/:id/primary/:imageId", setPrimaryById);
 

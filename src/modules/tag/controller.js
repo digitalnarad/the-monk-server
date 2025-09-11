@@ -6,9 +6,11 @@ import {
   response500,
 } from "../../utils/ApiResponse.js";
 import {
+  countDocument,
   createOne,
   findAll,
   findOne,
+  findPaginateQuery,
   updateOne,
 } from "../../config/db.service.js";
 import { modelName } from "../../utils/helper.js";
@@ -25,13 +27,54 @@ export const createTag = asyncHandler(async (req, res) => {
 
 // Get all active tags
 export const getAllTags = asyncHandler(async (req, res) => {
+  let {
+    page = 0,
+    limit = 10,
+    shortBy = "createdAt",
+    order = "asc",
+    search = "",
+  } = req.query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  const textCriteria = search
+    ? {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { value: { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  const tags = await findPaginateQuery(
+    modelName.TAG,
+    { isDeleted: false, ...textCriteria },
+    { [shortBy]: order === "asc" ? 1 : -1 },
+    page * limit,
+    limit
+  );
+
+  const count = await countDocument(modelName.TAG, {
+    isDeleted: false,
+    ...textCriteria,
+  });
+
+  return response200(res, "Tags fetched successfully", { tags, count });
+});
+
+export const getTagList = asyncHandler(async (req, res) => {
   const tags = await findAll(
     modelName.TAG,
     { isDeleted: false },
-    {},
-    { lean: true }
+    {
+      name: 1,
+      value: 1,
+      _id: 1,
+      desc: 1,
+    }
   );
-  return response200(res, "Tags fetched successfully", tags);
+  return response200(res, "Tags fetched successfully", { tags });
 });
 
 // Get a single tag by ID

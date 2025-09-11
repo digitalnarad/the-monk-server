@@ -19,10 +19,8 @@ const variantImageSchema = new mongoose.Schema(
 // Subdoc for a variant gallery
 const gallerySchema = new mongoose.Schema(
   {
-    images: { type: [variantImageSchema], default: [] },
-    // 0-based index into images; clamp in controllers when images mutate
+    images: { type: [String], default: [] },
     primaryIndex: { type: Number, default: 0 },
-    isActive: { type: Boolean, default: true },
   },
   { _id: false, timestamps: false }
 );
@@ -44,7 +42,6 @@ const productSchema = new mongoose.Schema(
         },
         { _id: false }
       ),
-      required: true,
       default: () => ({}),
     },
 
@@ -62,7 +59,7 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
 
-    image: { type: variantImageSchema, default: {} }, // generic images not tied to variants
+    image: { type: String, required: true, trim: true }, // generic images not tied to variants
 
     price: { type: Number, required: true, min: 0 },
     discount: { type: Number, default: 0, min: 0, max: 100 },

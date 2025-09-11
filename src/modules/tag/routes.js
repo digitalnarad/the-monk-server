@@ -5,19 +5,21 @@ import {
   getTagById,
   updateTag,
   deleteTag,
+  getTagList,
 } from "./controller.js";
 import { validator } from "../../middleware/validator.js";
 import { tagValidation } from "./validation.js";
 import { isAdmin } from "../../middleware/auth.js";
 
-const router = express.Router();
+const r = express.Router();
 
-router.get("/getAllTags", getAllTags);
-router.get("/getTagById/:id", getTagById);
+r.get("/get-List", getTagList);
+r.get("/", getAllTags);
+r.get("/:id", getTagById);
 
 // Admin routes
-router.post("/", isAdmin, validator(tagValidation), createTag);
-router.put("/:id", isAdmin, validator(tagValidation), updateTag);
-router.delete("/:id", isAdmin, deleteTag);
+r.post("/", isAdmin, validator(tagValidation), createTag);
+r.put("/:id", isAdmin, validator(tagValidation), updateTag);
+r.delete("/:id", isAdmin, deleteTag);
 
-export default router;
+export default r;
