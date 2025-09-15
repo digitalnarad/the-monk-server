@@ -1,17 +1,18 @@
 // src/modules/product/model.js
 import mongoose from "mongoose";
 import { modelName } from "../../utils/helper.js";
+import { token } from "morgan";
 
 // Subdoc for one image inside a variant
 const variantImageSchema = new mongoose.Schema(
   {
     url: { type: String, required: true, trim: true },
+    public_id: { type: String, required: true, trim: true },
     alt: { type: String, default: "" },
-    // optional extras if storing CDN info
+    token: { type: String, default: "", required: true },
     width: { type: Number },
     height: { type: Number },
     format: { type: String }, // e.g., "jpeg","png","webp"
-    sortOrder: { type: Number, default: 0 }, // for manual ordering if needed
   },
   { _id: true, timestamps: false }
 );
@@ -19,8 +20,8 @@ const variantImageSchema = new mongoose.Schema(
 // Subdoc for a variant gallery
 const gallerySchema = new mongoose.Schema(
   {
-    images: { type: [String], default: [] },
-    primaryIndex: { type: Number, default: 0 },
+    images: { type: [variantImageSchema], default: [] },
+    isPrimary: { type: String, default: "" },
   },
   { _id: false, timestamps: false }
 );

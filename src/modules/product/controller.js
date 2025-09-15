@@ -11,6 +11,9 @@ import {
   findOne,
   findAll,
   updateOne,
+  findPaginateQuery,
+  countDocument,
+  aggregation,
 } from "../../config/db.service.js";
 import Product from "./model.js";
 import { genSkuId_nanoid, modelName, msg } from "../../utils/helper.js";
@@ -123,124 +126,111 @@ export const updateProductDetails = asyncHandler(async (req, res) => {
   return response200(res, msg.update_success("Product"), product);
 });
 
-// POST /api/v1/products/:id/images (files[])
-export const addImages = asyncHandler(async (req, res) => {
-  const files = req.files || [];
-  if (!files.length) return response400(res, "no images provided");
-
-  const product = await Product.findOne({
-    _id: req.params.id,
-    isDeleted: false,
-  });
-  if (!product) return response404(res, "Product not found");
-
-  const folder = folderFor(product.skuId);
-  const start = (product.images?.length || 0) + 1;
-
-  const newImages = await uploadMany(files, folder, start);
-  product.images.push(...newImages);
-  await product.save();
-
-  return response201(res, "Images added", {
-    images: product.images,
-    primaryIndex: product.primaryIndex,
-  });
-});
-
-// PUT /api/v1/products/:id/images/:imageId  (file)
-export const replaceImageById = asyncHandler(async (req, res) => {
-  if (!req.file) return response400(res, "file is required");
-  const { id, imageId } = req.params;
+export const updateVariants = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
   const product = await Product.findOne({ _id: id, isDeleted: false });
   if (!product) return response404(res, "Product not found");
 
-  const idx = findImageIndexById(product, imageId);
-  if (idx === -1) return response404(res, "Image not found");
+  const variants = req.body;
+  console.log("variants", variants);
 
-  const folder = folderFor(product.skuId);
-  const public_id = publicIdForIndex(idx + 1); // keep deterministic naming
-  const up = await uploadBuffer(req.file.buffer, folder, public_id);
+  const newProduct = await updateOne(
+    modelName.PRODUCT,
+    { _id: id },
+    { variants }
+  );
 
-  // preserve same _id while updating fields
-  product.images[idx] = {
-    _id: product.images[idx]._id,
-    url: deliverUrl(up.public_id),
-    width: up.width,
-    height: up.height,
-    format: normalizeFormat(up.format),
-  };
-  await product.save();
-
-  return response200(res, "Image replaced", { image: product.images[idx] });
-});
-
-// DELETE /api/v1/products/:id/images/:imageId
-export const deleteImageById = asyncHandler(async (req, res) => {
-  const { id, imageId } = req.params;
-
-  const product = await Product.findOne({ _id: id, isDeleted: false });
-  if (!product) return response404(res, "Product not found");
-
-  const idx = findImageIndexById(product, imageId);
-  if (idx === -1) return response404(res, "Image not found");
-
-  // Optional: also delete from Cloudinary if you store public_id separately.
-  product.images.splice(idx, 1);
-
-  // clamp primaryIndex
-  if (product.images.length === 0) product.primaryIndex = 0;
-  else if (product.primaryIndex >= product.images.length)
-    product.primaryIndex = product.images.length - 1;
-
-  await product.save();
-
-  return response200(res, "Image deleted", {
-    images: product.images,
-    primaryIndex: product.primaryIndex,
-  });
-});
-
-// PATCH /api/v1/products/:id/primary/:imageId
-export const setPrimaryById = asyncHandler(async (req, res) => {
-  const { id, imageId } = req.params;
-
-  const product = await Product.findOne({ _id: id, isDeleted: false });
-  if (!product) return response404(res, "Product not found");
-
-  const idx = findImageIndexById(product, imageId);
-  if (idx === -1) return response404(res, "Image not found");
-
-  product.primaryIndex = idx;
-  await product.save();
-
-  return response200(res, "Primary updated", {
-    primaryIndex: idx,
-    primary: product.images[idx],
-  });
+  console.log("newProduct", newProduct);
+  return response200(res, "Variants updated", newProduct);
 });
 
 // GET /api/v1/products/:id
-export const getProduct = asyncHandler(async (req, res) => {
+export const getProductBySku = asyncHandler(async (req, res) => {
   const product = await findOne(modelName.PRODUCT, {
-    _id: req.params.id,
+    skuId: req.params.skuId,
     isDeleted: false,
   });
   if (!product) return response404(res, "Not found");
-  return response200(res, "OK", product);
+  return response200(res, msg.fetch_success("Product"), product);
 });
 
 // GET /api/v1/products
 export const listProducts = asyncHandler(async (req, res) => {
-  const items = await findAll("products", { isDeleted: false });
-  console.log("items", items);
-  const out = items.map((p) => ({
-    ...p,
-    primary: p.images[p.primaryIndex] || null,
-  }));
-  return response200(res, "OK", { items: out });
+  let {
+    page = 0,
+    limit = 10,
+    sortBy = "createdAt",
+    order = "asc",
+    search = "",
+  } = req.query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  const skip = page * limit;
+  const sort = { [sortBy]: order === "asc" ? 1 : -1 };
+
+  const match = {
+    isDeleted: false,
+    ...(search
+      ? {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { skuId: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {}),
+  };
+
+  const pipeline = [
+    { $match: match },
+
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category",
+      },
+    },
+    { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+
+    {
+      $lookup: {
+        from: "tags",
+        localField: "tags",
+        foreignField: "_id",
+        as: "tags",
+      },
+    },
+
+    { $sort: sort },
+    { $skip: skip },
+    { $limit: limit },
+  ];
+
+  const [products, count] = await Promise.all([
+    aggregation(modelName.PRODUCT, pipeline),
+    countDocument(modelName.PRODUCT, match),
+  ]);
+
+  return response200(res, msg.list_fetch_success("Products"), {
+    products,
+    count,
+  });
 });
 
-export const getSkuId = asyncHandler(async (req, res) => {
-  return response200(res, "OK", { skuId });
+export const deleteProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const product = await findOne(modelName.PRODUCT, {
+    _id: id,
+    isDeleted: false,
+  });
+  if (!product) return response404(res, "Product not found");
+
+  await updateOne(modelName.PRODUCT, { _id: id }, { isDeleted: true });
+
+  return response200(res, msg.delete_success("Product"), {});
 });

@@ -30,6 +30,7 @@ export const msg = {
   create_success: (name) => `${name} created successfully`,
   not_found: (name) => `${name} not found`,
   is_exists: (name) => `${name} is already exists`,
+  list_fetch_success: (name) => `${name} list fetched successfully`,
 };
 
 // Model names
